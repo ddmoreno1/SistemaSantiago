@@ -274,7 +274,7 @@ export default function Page() {
     />
   </div>
 
-  <div className="flex justify-center md:flex-1">
+  <div className="flex justify-center  items-center md:flex-1">
     <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wider">
   BIENVENIDO SANTIAGO 
 </h1>
