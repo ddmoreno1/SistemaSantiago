@@ -211,9 +211,11 @@ export default function Page() {
       <main className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md rounded-3xl bg-white shadow-xl p-8">
           <div className="text-center mb-6">
-            <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-2xl font-bold">
-              ET
-            </div>
+            <img
+              src="/LOGO.ai"
+              alt="ElectroTecnik"
+              className="h-16 w-16 object-contain"
+            />
             <h1 className="text-2xl font-bold text-slate-900">
               ElectroTecnik Servicios
             </h1>
@@ -251,10 +253,10 @@ export default function Page() {
         <header className="mb-6 rounded-3xl bg-white shadow-lg p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <img
-  src="/Logo.png"
-  alt="ElectroTecnik"
-  className="h-16 w-16 object-contain"
-/>
+              src="/LOGO.ai"
+              alt="ElectroTecnik"
+              className="h-16 w-16 object-contain"
+            />
 
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
