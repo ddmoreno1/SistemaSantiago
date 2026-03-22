@@ -35,6 +35,9 @@ export default function Page() {
   const [searchTerm, setSearchTerm] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState('Todos')
   const [stockFiltro, setStockFiltro] = useState('Todos')
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  const [productoPendiente, setProductoPendiente] = useState<Producto | null>(null)
+  const [deltaPendiente, setDeltaPendiente] = useState(0)
 
   useEffect(() => {
     const saved = localStorage.getItem('inventario_login')
@@ -156,25 +159,41 @@ export default function Page() {
     fetchProductos()
   }
 
-  async function changeCantidad(producto: Producto, delta: number) {
-    const nuevaCantidad = Math.max(0, producto.cantidad + delta)
+  function changeCantidad(producto: Producto, delta: number) {
+    setProductoPendiente(producto)
+    setDeltaPendiente(delta)
+    setConfirmModalOpen(true)
+  }
+
+  async function confirmarCambioCantidad() {
+    if (!productoPendiente) return
+
+    const nuevaCantidad = Math.max(0, productoPendiente.cantidad + deltaPendiente)
 
     const { error } = await supabase
       .from('productos')
       .update({ cantidad: nuevaCantidad })
-      .eq('id', producto.id)
+      .eq('id', productoPendiente.id)
 
     if (error) {
       setError('No se pudo actualizar la cantidad.')
       return
     }
 
-    if (selected?.id === producto.id) {
-      setSelected({ ...producto, cantidad: nuevaCantidad })
+    if (selected?.id === productoPendiente.id) {
+      setSelected({ ...productoPendiente, cantidad: nuevaCantidad })
     }
 
+    setConfirmModalOpen(false)
+    setProductoPendiente(null)
+    setDeltaPendiente(0)
     fetchProductos()
   }
+  function cerrarConfirmModal() {
+  setConfirmModalOpen(false)
+  setProductoPendiente(null)
+  setDeltaPendiente(0)
+}
 
   const productosFiltrados = useMemo(() => {
     const termino = searchTerm.toLowerCase().trim()
@@ -210,17 +229,13 @@ export default function Page() {
     return (
       <main className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md rounded-3xl bg-white shadow-xl p-8">
-          <div className="text-center mb-6">
-            <img
-              src="/LOGO.ai"
-              alt="ElectroTecnik"
-              className="h-16 w-16 object-contain"
-            />
-            <h1 className="text-2xl font-bold text-slate-900">
-              ElectroTecnik Servicios
-            </h1>
-            <p className="text-sm text-slate-500 mt-2">Sistema de inventario</p>
-          </div>
+          <div className="text-center mb-6 flex justify-center">
+          <img
+            src="/Logo1.png"
+            alt="Logo"
+            className="h-20 md:h-24 lg:h-28 w-auto object-contain"
+          />
+        </div>
 
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Usuario
@@ -238,7 +253,7 @@ export default function Page() {
 
           <button
             onClick={handleLogin}
-            className="mt-5 w-full rounded-2xl bg-slate-900 text-white py-3 font-semibold hover:opacity-95"
+            className="mt-5 w-full rounded-2xl bg-slate-900 text-white py-3 font-semibold hover:opacity-95 cursor-pointer"
           >
             Iniciar sesión
           </button>
@@ -250,41 +265,38 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-slate-100 p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-6 rounded-3xl bg-white shadow-lg p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <img
-              src="/LOGO.ai"
-              alt="ElectroTecnik"
-              className="h-16 w-16 object-contain"
-            />
+        <header className="mb-6 rounded-3xl bg-white shadow-lg px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+  <div className="flex items-center h-full">
+    <img
+      src="/Logo1.png"
+      alt="Logo"
+      className="h-16 md:h-20 lg:h-24 w-auto object-contain"
+    />
+  </div>
 
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
-                ElectroTecnik Servicios
-              </h1>
-              <p className="text-slate-500">
-                Inventario de repuestos, insumos y equipos
-              </p>
-            </div>
-          </div>
+  <div className="flex justify-center md:flex-1">
+    <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wider">
+  BIENVENIDO SANTIAGO 
+</h1>
+  </div>
 
-          <div className="flex gap-3 flex-wrap">
-            <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-black placeholder-gray-500">
-              <span className="font-semibold">Productos:</span> {totalProductos}
-            </div>
+  <div className="flex gap-3 flex-wrap">
+    <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-black placeholder-gray-500">
+      <span className="font-semibold">Productos:</span> {totalProductos}
+    </div>
 
-            <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-black placeholder-gray-500">
-              <span className="font-semibold">Stock total:</span> {totalStock}
-            </div>
+    <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-black placeholder-gray-500">
+      <span className="font-semibold">Stock total:</span> {totalStock}
+    </div>
 
-            <button
-              onClick={logout}
-              className="rounded-2xl bg-red-600 px-4 py-2 text-sm font-semibold text-white"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </header>
+    <button
+      onClick={logout}
+      className="rounded-2xl bg-red-600 px-4 py-2 text-sm font-semibold text-white cursor-pointer"
+    >
+      Cerrar sesión
+    </button>
+  </div>
+</header>
 
         <section className="mb-6 rounded-3xl bg-white shadow-lg p-6">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
@@ -304,7 +316,7 @@ export default function Page() {
                 setError('')
                 setIsModalOpen(true)
               }}
-              className="rounded-2xl bg-slate-900 px-5 py-3 text-white font-semibold"
+              className="rounded-2xl bg-slate-900 px-5 py-3 text-white font-semibold cursor-pointer"
             >
               Crear producto
             </button>
@@ -391,7 +403,7 @@ export default function Page() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => changeCantidad(producto, -1)}
-                  className="h-8 w-8 rounded-full bg-slate-200 font-bold"
+                  className="h-8 w-8 rounded-full bg-slate-200 font-bold cursor-pointer"
                 >
                   -
                 </button>
@@ -402,7 +414,7 @@ export default function Page() {
 
                 <button
                   onClick={() => changeCantidad(producto, 1)}
-                  className="h-8 w-8 rounded-full bg-slate-900 text-white font-bold"
+                  className="h-8 w-8 rounded-full bg-slate-900 text-white font-bold cursor-pointer"
                 >
                   +
                 </button>
@@ -413,21 +425,21 @@ export default function Page() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelected(producto)}
-                  className="rounded-xl bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700"
+                  className="rounded-xl bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 cursor-pointer"
                 >
                   Ver más
                 </button>
 
                 <button
                   onClick={() => editProducto(producto)}
-                  className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-medium text-amber-700"
+                  className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-medium text-amber-700 cursor-pointer"
                 >
                   Editar
                 </button>
 
                 <button
                   onClick={() => deleteProducto(producto.id)}
-                  className="rounded-xl bg-red-100 px-3 py-2 text-sm font-medium text-red-700"
+                  className="rounded-xl bg-red-100 px-3 py-2 text-sm font-medium text-red-700 cursor-pointer"
                 >
                   Eliminar
                 </button>
@@ -473,7 +485,7 @@ export default function Page() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => changeCantidad(producto, -1)}
-              className="h-9 w-9 rounded-full bg-slate-200 font-bold"
+              className="h-9 w-9 rounded-full bg-slate-200 font-bold cursor-pointer"
             >
               -
             </button>
@@ -484,7 +496,7 @@ export default function Page() {
 
             <button
               onClick={() => changeCantidad(producto, 1)}
-              className="h-9 w-9 rounded-full bg-slate-900 text-white font-bold"
+              className="h-9 w-9 rounded-full bg-slate-900 text-white font-bold cursor-pointer"
             >
               +
             </button>
@@ -498,21 +510,21 @@ export default function Page() {
         <div className="mt-4 grid grid-cols-3 gap-2">
           <button
             onClick={() => setSelected(producto)}
-            className="rounded-xl bg-blue-100 px-2 py-2 text-xs font-medium text-blue-700"
+            className="rounded-xl bg-blue-100 px-2 py-2 text-xs font-medium cursor-pointer text-blue-700"
           >
             Ver más
           </button>
 
           <button
             onClick={() => editProducto(producto)}
-            className="rounded-xl bg-amber-100 px-2 py-2 text-xs font-medium text-amber-700"
+            className="rounded-xl bg-amber-100 px-2 py-2 text-xs font-medium text-amber-700 cursor-pointer"
           >
             Editar
           </button>
 
           <button
             onClick={() => deleteProducto(producto.id)}
-            className="rounded-xl bg-red-100 px-2 py-2 text-xs font-medium text-red-700"
+            className="rounded-xl bg-red-100 px-2 py-2 text-xs font-medium text-red-700 cursor-pointer"
           >
             Eliminar
           </button>
@@ -538,7 +550,7 @@ export default function Page() {
                   setForm(initialForm)
                   setError('')
                 }}
-                className="absolute top-4 right-4 h-9 w-9 rounded-full bg-red-500 text-white font-bold"
+                className="absolute top-4 right-4 h-9 w-9 rounded-full bg-red-500 text-white font-bold cursor-pointer"
               >
                 X
               </button>
@@ -606,14 +618,14 @@ export default function Page() {
                     setForm(initialForm)
                     setError('')
                   }}
-                  className="rounded-2xl bg-slate-200 px-5 py-3 font-semibold text-slate-700"
+                  className="rounded-2xl bg-slate-200 px-5 py-3 font-semibold text-slate-700 cursor-pointer"
                 >
                   Cancelar
                 </button>
 
                 <button
                   onClick={saveProducto}
-                  className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white"
+                  className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white cursor-pointer"
                 >
                   {editingId ? 'Guardar cambios' : 'Crear producto'}
                 </button>
@@ -627,7 +639,7 @@ export default function Page() {
             <div className="bg-white rounded-3xl shadow-xl p-6 w-[90%] max-w-lg relative">
               <button
                 onClick={() => setSelected(null)}
-                className="absolute top-3 right-3 bg-red-500 text-white w-8 h-8 rounded-full"
+                className="absolute top-3 right-3 bg-red-500 text-white w-8 h-8 rounded-full cursor-pointer"
               >
                 X
               </button>
@@ -669,6 +681,52 @@ export default function Page() {
             </div>
           </div>
         )}
+        {confirmModalOpen && productoPendiente && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="w-full max-w-md rounded-3xl bg-white shadow-xl p-6 relative">
+      <button
+        onClick={cerrarConfirmModal}
+        className="absolute top-4 right-4 h-9 w-9 rounded-full bg-red-500 text-white font-bold cursor-pointer"
+      >
+        X
+      </button>
+
+      <h3 className="text-xl font-bold text-slate-900 mb-4">
+        Confirmar acción
+      </h3>
+
+      <p className="text-slate-700 mb-2">
+        ¿Deseas {deltaPendiente > 0 ? 'aumentar' : 'disminuir'} la cantidad de:
+      </p>
+
+      <p className="font-semibold text-slate-900 mb-2">
+        {productoPendiente.nombre_producto}
+      </p>
+
+      <p className="text-sm text-slate-500 mb-6">
+        Cantidad actual: {productoPendiente.cantidad}
+      </p>
+
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={cerrarConfirmModal}
+          className="rounded-2xl bg-slate-200 px-5 py-3 font-semibold text-slate-700 cursor-pointer"
+        >
+          Cancelar
+        </button>
+
+        <button
+          onClick={confirmarCambioCantidad}
+          className={`rounded-2xl cursor-pointer px-5 py-3 font-semibold text-white ${
+            deltaPendiente > 0 ? 'bg-slate-900' : 'bg-amber-600'
+          }`}
+        >
+          {deltaPendiente > 0 ? 'Sí, aumentar' : 'Sí, disminuir'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </main>
   )
