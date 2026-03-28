@@ -8,6 +8,7 @@ type Producto = {
   nombre_producto: string
   descripcion: string
   precio: number
+  precio_compra: number
   cantidad: number
   tipo: string
 }
@@ -18,6 +19,7 @@ const initialForm = {
   nombre_producto: '',
   descripcion: '',
   precio: '',
+  precio_compra: '',
   cantidad: '',
   tipo: 'Repuesto',
 }
@@ -97,6 +99,7 @@ export default function Page() {
       nombre_producto: form.nombre_producto.trim(),
       descripcion: form.descripcion.trim(),
       precio: Number(form.precio || 0),
+      precio_compra: Number(form.precio_compra || 0),
       cantidad: Number(form.cantidad || 0),
       tipo: form.tipo,
     }
@@ -134,6 +137,7 @@ export default function Page() {
       nombre_producto: producto.nombre_producto,
       descripcion: producto.descripcion,
       precio: String(producto.precio),
+      precio_compra: String(producto.precio_compra ?? 0),
       cantidad: String(producto.cantidad),
       tipo: producto.tipo || 'Repuesto',
     })
@@ -189,11 +193,12 @@ export default function Page() {
     setDeltaPendiente(0)
     fetchProductos()
   }
+
   function cerrarConfirmModal() {
-  setConfirmModalOpen(false)
-  setProductoPendiente(null)
-  setDeltaPendiente(0)
-}
+    setConfirmModalOpen(false)
+    setProductoPendiente(null)
+    setDeltaPendiente(0)
+  }
 
   const productosFiltrados = useMemo(() => {
     const termino = searchTerm.toLowerCase().trim()
@@ -230,12 +235,12 @@ export default function Page() {
       <main className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
         <div className="w-full max-w-md rounded-3xl bg-white shadow-xl p-8">
           <div className="text-center mb-6 flex justify-center">
-          <img
-            src="/Logo1.png"
-            alt="Logo"
-            className="h-20 md:h-24 lg:h-28 w-auto object-contain"
-          />
-        </div>
+            <img
+              src="/Logo1.png"
+              alt="Logo"
+              className="h-20 md:h-24 lg:h-28 w-auto object-contain"
+            />
+          </div>
 
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Usuario
@@ -266,37 +271,37 @@ export default function Page() {
     <main className="min-h-screen bg-slate-100 p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
         <header className="mb-6 rounded-3xl bg-white shadow-lg px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-  <div className="flex items-center h-full">
-    <img
-      src="/Logo1.png"
-      alt="Logo"
-      className="h-16 md:h-20 lg:h-24 w-auto object-contain"
-    />
-  </div>
+          <div className="flex items-center h-full">
+            <img
+              src="/Logo1.png"
+              alt="Logo"
+              className="h-16 md:h-20 lg:h-24 w-auto object-contain"
+            />
+          </div>
 
-  <div className="flex justify-center  items-center md:flex-1">
-    <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wider">
-  BIENVENIDO SANTIAGO 
-</h1>
-  </div>
+          <div className="flex justify-center items-center md:flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-wider">
+              BIENVENIDO SANTIAGO
+            </h1>
+          </div>
 
-  <div className="flex gap-3 flex-wrap">
-    <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-black placeholder-gray-500">
-      <span className="font-semibold">Productos:</span> {totalProductos}
-    </div>
+          <div className="flex gap-3 flex-wrap">
+            <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-black placeholder-gray-500">
+              <span className="font-semibold">Productos:</span> {totalProductos}
+            </div>
 
-    <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-black placeholder-gray-500">
-      <span className="font-semibold">Stock total:</span> {totalStock}
-    </div>
+            <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-black placeholder-gray-500">
+              <span className="font-semibold">Stock total:</span> {totalStock}
+            </div>
 
-    <button
-      onClick={logout}
-      className="rounded-2xl bg-red-600 px-4 py-2 text-sm font-semibold text-white cursor-pointer"
-    >
-      Cerrar sesión
-    </button>
-  </div>
-</header>
+            <button
+              onClick={logout}
+              className="rounded-2xl bg-red-600 px-4 py-2 text-sm font-semibold text-white cursor-pointer"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </header>
 
         <section className="mb-6 rounded-3xl bg-white shadow-lg p-6">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
@@ -356,189 +361,198 @@ export default function Page() {
         </section>
 
         <section className="rounded-3xl bg-white shadow-lg p-4 md:p-6 overflow-hidden">
-  <div className="flex items-center justify-between mb-4">
-    <h2 className="text-lg md:text-xl font-bold text-slate-900">
-      Productos disponibles
-    </h2>
-    {loading ? (
-      <span className="text-sm text-slate-500">Cargando...</span>
-    ) : null}
-  </div>
-
-  {error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
-
-  <div className="hidden md:block overflow-x-auto">
-    <table className="min-w-full border-separate border-spacing-y-2">
-      <thead>
-        <tr className="text-left text-sm text-slate-500">
-          <th className="px-3 py-2">ID</th>
-          <th className="px-3 py-2">Nombre</th>
-          <th className="px-3 py-2">Tipo</th>
-          <th className="px-3 py-2">Precio</th>
-          <th className="px-3 py-2">Cantidad</th>
-          <th className="px-3 py-2">Acciones</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {productosFiltrados.map((producto) => (
-          <tr key={producto.id} className="bg-slate-50">
-            <td className="px-3 py-3 rounded-l-2xl">{producto.id}</td>
-
-            <td className="px-3 py-3 font-medium">
-              {producto.nombre_producto}
-            </td>
-
-            <td className="px-3 py-3">
-              <span className="rounded-xl bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700">
-                {producto.tipo || 'Sin tipo'}
-              </span>
-            </td>
-
-            <td className="px-3 py-3">
-              ${Number(producto.precio).toFixed(2)}
-            </td>
-
-            <td className="px-3 py-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => changeCantidad(producto, -1)}
-                  className="h-8 w-8 rounded-full bg-slate-200 font-bold cursor-pointer"
-                >
-                  -
-                </button>
-
-                <span className="min-w-8 text-center font-semibold">
-                  {producto.cantidad}
-                </span>
-
-                <button
-                  onClick={() => changeCantidad(producto, 1)}
-                  className="h-8 w-8 rounded-full bg-slate-900 text-white font-bold cursor-pointer"
-                >
-                  +
-                </button>
-              </div>
-            </td>
-
-            <td className="px-3 py-3 rounded-r-2xl">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setSelected(producto)}
-                  className="rounded-xl bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 cursor-pointer"
-                >
-                  Ver más
-                </button>
-
-                <button
-                  onClick={() => editProducto(producto)}
-                  className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-medium text-amber-700 cursor-pointer"
-                >
-                  Editar
-                </button>
-
-                <button
-                  onClick={() => deleteProducto(producto.id)}
-                  className="rounded-xl bg-red-100 px-3 py-2 text-sm font-medium text-red-700 cursor-pointer"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-
-  <div className="md:hidden space-y-4">
-    {productosFiltrados.map((producto) => (
-      <div
-        key={producto.id}
-        className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs text-slate-500">ID: {producto.id}</p>
-            <h3 className="text-base font-bold text-slate-900">
-              {producto.nombre_producto}
-            </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900">
+              Productos disponibles
+            </h2>
+            {loading ? (
+              <span className="text-sm text-slate-500">Cargando...</span>
+            ) : null}
           </div>
 
-          <span className="rounded-xl bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
-            {producto.tipo || 'Sin tipo'}
-          </span>
-        </div>
+          {error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
 
-        <div className="mt-4 space-y-2 text-sm text-slate-700">
-          <p>
-            <span className="font-semibold">Precio:</span> $
-            {Number(producto.precio).toFixed(2)}
-          </p>
-          <p>
-            <span className="font-semibold">Descripción:</span>{' '}
-            {producto.descripcion || 'Sin descripción'}
-          </p>
-        </div>
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-full border-separate border-spacing-y-2">
+              <thead>
+                <tr className="text-left text-sm text-slate-500">
+                  <th className="px-3 py-2">ID</th>
+                  <th className="px-3 py-2">Nombre</th>
+                  <th className="px-3 py-2">Tipo</th>
+                  <th className="px-3 py-2">Precio venta</th>
+                  <th className="px-3 py-2">Precio compra</th>
+                  <th className="px-3 py-2">Cantidad</th>
+                  <th className="px-3 py-2">Acciones</th>
+                </tr>
+              </thead>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => changeCantidad(producto, -1)}
-              className="h-9 w-9 rounded-full bg-slate-200 font-bold cursor-pointer"
-            >
-              -
-            </button>
+              <tbody>
+                {productosFiltrados.map((producto) => (
+                  <tr key={producto.id} className="bg-slate-50">
+                    <td className="px-3 py-3 rounded-l-2xl">{producto.id}</td>
 
-            <span className="min-w-8 text-center font-semibold text-slate-900">
-              {producto.cantidad}
-            </span>
+                    <td className="px-3 py-3 font-medium">
+                      {producto.nombre_producto}
+                    </td>
 
-            <button
-              onClick={() => changeCantidad(producto, 1)}
-              className="h-9 w-9 rounded-full bg-slate-900 text-white font-bold cursor-pointer"
-            >
-              +
-            </button>
+                    <td className="px-3 py-3">
+                      <span className="rounded-xl bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700">
+                        {producto.tipo || 'Sin tipo'}
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-3">
+                      ${Number(producto.precio).toFixed(2)}
+                    </td>
+
+                    <td className="px-3 py-3">
+                      ${Number(producto.precio_compra ?? 0).toFixed(2)}
+                    </td>
+
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => changeCantidad(producto, -1)}
+                          className="h-8 w-8 rounded-full bg-slate-200 font-bold cursor-pointer"
+                        >
+                          -
+                        </button>
+
+                        <span className="min-w-8 text-center font-semibold">
+                          {producto.cantidad}
+                        </span>
+
+                        <button
+                          onClick={() => changeCantidad(producto, 1)}
+                          className="h-8 w-8 rounded-full bg-slate-900 text-white font-bold cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
+
+                    <td className="px-3 py-3 rounded-r-2xl">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setSelected(producto)}
+                          className="rounded-xl bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 cursor-pointer"
+                        >
+                          Ver más
+                        </button>
+
+                        <button
+                          onClick={() => editProducto(producto)}
+                          className="rounded-xl bg-amber-100 px-3 py-2 text-sm font-medium text-amber-700 cursor-pointer"
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          onClick={() => deleteProducto(producto.id)}
+                          className="rounded-xl bg-red-100 px-3 py-2 text-sm font-medium text-red-700 cursor-pointer"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <span className="text-sm font-medium text-slate-600">
-            Stock actual
-          </span>
-        </div>
+          <div className="md:hidden space-y-4">
+            {productosFiltrados.map((producto) => (
+              <div
+                key={producto.id}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-slate-500">ID: {producto.id}</p>
+                    <h3 className="text-base font-bold text-slate-900">
+                      {producto.nombre_producto}
+                    </h3>
+                  </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <button
-            onClick={() => setSelected(producto)}
-            className="rounded-xl bg-blue-100 px-2 py-2 text-xs font-medium cursor-pointer text-blue-700"
-          >
-            Ver más
-          </button>
+                  <span className="rounded-xl bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
+                    {producto.tipo || 'Sin tipo'}
+                  </span>
+                </div>
 
-          <button
-            onClick={() => editProducto(producto)}
-            className="rounded-xl bg-amber-100 px-2 py-2 text-xs font-medium text-amber-700 cursor-pointer"
-          >
-            Editar
-          </button>
+                <div className="mt-4 space-y-2 text-sm text-slate-700">
+                  <p>
+                    <span className="font-semibold">Precio venta:</span> $
+                    {Number(producto.precio).toFixed(2)}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Precio compra:</span> $
+                    {Number(producto.precio_compra ?? 0).toFixed(2)}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Descripción:</span>{' '}
+                    {producto.descripcion || 'Sin descripción'}
+                  </p>
+                </div>
 
-          <button
-            onClick={() => deleteProducto(producto.id)}
-            className="rounded-xl bg-red-100 px-2 py-2 text-xs font-medium text-red-700 cursor-pointer"
-          >
-            Eliminar
-          </button>
-        </div>
-      </div>
-    ))}
-  </div>
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => changeCantidad(producto, -1)}
+                      className="h-9 w-9 rounded-full bg-slate-200 font-bold cursor-pointer"
+                    >
+                      -
+                    </button>
 
-  {!loading && productosFiltrados.length === 0 ? (
-    <div className="py-10 text-center text-slate-500">
-      No se encontraron productos con esos filtros.
-    </div>
-  ) : null}
-</section>
+                    <span className="min-w-8 text-center font-semibold text-slate-900">
+                      {producto.cantidad}
+                    </span>
+
+                    <button
+                      onClick={() => changeCantidad(producto, 1)}
+                      className="h-9 w-9 rounded-full bg-slate-900 text-white font-bold cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <span className="text-sm font-medium text-slate-600">
+                    Stock actual
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setSelected(producto)}
+                    className="rounded-xl bg-blue-100 px-2 py-2 text-xs font-medium cursor-pointer text-blue-700"
+                  >
+                    Ver más
+                  </button>
+
+                  <button
+                    onClick={() => editProducto(producto)}
+                    className="rounded-xl bg-amber-100 px-2 py-2 text-xs font-medium text-amber-700 cursor-pointer"
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    onClick={() => deleteProducto(producto.id)}
+                    className="rounded-xl bg-red-100 px-2 py-2 text-xs font-medium text-red-700 cursor-pointer"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!loading && productosFiltrados.length === 0 ? (
+            <div className="py-10 text-center text-slate-500">
+              No se encontraron productos con esos filtros.
+            </div>
+          ) : null}
+        </section>
 
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -582,9 +596,20 @@ export default function Page() {
                 <input
                   type="number"
                   step="0.01"
-                  placeholder="Precio"
+                  placeholder="Precio de venta"
                   value={form.precio}
                   onChange={(e) => setForm({ ...form, precio: e.target.value })}
+                  className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-black placeholder-gray-500"
+                />
+
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Precio de compra"
+                  value={form.precio_compra}
+                  onChange={(e) =>
+                    setForm({ ...form, precio_compra: e.target.value })
+                  }
                   className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-black placeholder-gray-500"
                 />
 
@@ -663,8 +688,13 @@ export default function Page() {
                 </p>
 
                 <p>
-                  <span className="font-semibold">Precio:</span> $
+                  <span className="font-semibold">Precio de venta:</span> $
                   {Number(selected.precio).toFixed(2)}
+                </p>
+
+                <p>
+                  <span className="font-semibold">Precio de compra:</span> $
+                  {Number(selected.precio_compra ?? 0).toFixed(2)}
                 </p>
 
                 <p>
@@ -681,52 +711,53 @@ export default function Page() {
             </div>
           </div>
         )}
+
         {confirmModalOpen && productoPendiente && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-    <div className="w-full max-w-md rounded-3xl bg-white shadow-xl p-6 relative">
-      <button
-        onClick={cerrarConfirmModal}
-        className="absolute top-4 right-4 h-9 w-9 rounded-full bg-red-500 text-white font-bold cursor-pointer"
-      >
-        X
-      </button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-md rounded-3xl bg-white shadow-xl p-6 relative">
+              <button
+                onClick={cerrarConfirmModal}
+                className="absolute top-4 right-4 h-9 w-9 rounded-full bg-red-500 text-white font-bold cursor-pointer"
+              >
+                X
+              </button>
 
-      <h3 className="text-xl font-bold text-slate-900 mb-4">
-        Confirmar acción
-      </h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-4">
+                Confirmar acción
+              </h3>
 
-      <p className="text-slate-700 mb-2">
-        ¿Deseas {deltaPendiente > 0 ? 'aumentar' : 'disminuir'} la cantidad de:
-      </p>
+              <p className="text-slate-700 mb-2">
+                ¿Deseas {deltaPendiente > 0 ? 'aumentar' : 'disminuir'} la cantidad de:
+              </p>
 
-      <p className="font-semibold text-slate-900 mb-2">
-        {productoPendiente.nombre_producto}
-      </p>
+              <p className="font-semibold text-slate-900 mb-2">
+                {productoPendiente.nombre_producto}
+              </p>
 
-      <p className="text-sm text-slate-500 mb-6">
-        Cantidad actual: {productoPendiente.cantidad}
-      </p>
+              <p className="text-sm text-slate-500 mb-6">
+                Cantidad actual: {productoPendiente.cantidad}
+              </p>
 
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={cerrarConfirmModal}
-          className="rounded-2xl bg-slate-200 px-5 py-3 font-semibold text-slate-700 cursor-pointer"
-        >
-          Cancelar
-        </button>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={cerrarConfirmModal}
+                  className="rounded-2xl bg-slate-200 px-5 py-3 font-semibold text-slate-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
 
-        <button
-          onClick={confirmarCambioCantidad}
-          className={`rounded-2xl cursor-pointer px-5 py-3 font-semibold text-white ${
-            deltaPendiente > 0 ? 'bg-slate-900' : 'bg-amber-600'
-          }`}
-        >
-          {deltaPendiente > 0 ? 'Sí, aumentar' : 'Sí, disminuir'}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                <button
+                  onClick={confirmarCambioCantidad}
+                  className={`rounded-2xl cursor-pointer px-5 py-3 font-semibold text-white ${
+                    deltaPendiente > 0 ? 'bg-slate-900' : 'bg-amber-600'
+                  }`}
+                >
+                  {deltaPendiente > 0 ? 'Sí, aumentar' : 'Sí, disminuir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   )
