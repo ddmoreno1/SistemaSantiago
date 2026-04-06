@@ -23,6 +23,7 @@ type CotizacionItem = {
 }
 
 const USUARIO_VALIDO = 'santiago'
+const PRODUCTOS_POR_PAGINA = 15
 
 const initialForm = {
   nombre_producto: '',
@@ -55,7 +56,8 @@ export default function Page() {
   const [vista, setVista] = useState<'inventario' | 'cotizacion'>('inventario')
 
   const [cotizacionItems, setCotizacionItems] = useState<CotizacionItem[]>([])
-  const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null)
+  const [productoSeleccionado, setProductoSeleccionado] =
+    useState<Producto | null>(null)
   const [cantidadCot, setCantidadCot] = useState(1)
   const [busquedaProductoCot, setBusquedaProductoCot] = useState('')
 
@@ -72,6 +74,9 @@ export default function Page() {
   const [fechaCotizacion, setFechaCotizacion] = useState(
     new Date().toISOString().slice(0, 10)
   )
+
+  const [paginaActual, setPaginaActual] = useState(1)
+  const [ventaLoading, setVentaLoading] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem('inventario_login')
@@ -239,6 +244,15 @@ export default function Page() {
     if (!producto) return
 
     const existe = cotizacionItems.find((item) => item.id === producto.id)
+    const cantidadYaAgregada = existe ? existe.cantidad : 0
+    const cantidadTotalDeseada = cantidadYaAgregada + cantidadCot
+
+    if (cantidadTotalDeseada > producto.cantidad) {
+      setError(
+        `No puedes agregar más de ${producto.cantidad} unidades de "${producto.nombre_producto}".`
+      )
+      return
+    }
 
     if (existe) {
       const actualizados = cotizacionItems.map((item) =>
@@ -263,6 +277,7 @@ export default function Page() {
       setCotizacionItems([...cotizacionItems, nuevoItem])
     }
 
+    setError('')
     setProductoSeleccionado(null)
     setCantidadCot(1)
     setBusquedaProductoCot('')
@@ -275,12 +290,19 @@ export default function Page() {
   }
 
   function cambiarCantidadItem(index: number, nuevaCantidad: number) {
+    const itemActual = cotizacionItems[index]
+    const productoOriginal = productos.find((p) => p.id === itemActual.id)
+
+    if (!productoOriginal) return
+
     const cantidadValida = Math.max(1, nuevaCantidad)
+    const cantidadFinal = Math.min(cantidadValida, productoOriginal.cantidad)
+
     const nuevos = [...cotizacionItems]
     nuevos[index] = {
       ...nuevos[index],
-      cantidad: cantidadValida,
-      subtotal: cantidadValida * nuevos[index].precio,
+      cantidad: cantidadFinal,
+      subtotal: cantidadFinal * nuevos[index].precio,
     }
     setCotizacionItems(nuevos)
   }
@@ -316,6 +338,54 @@ export default function Page() {
     window.print()
   }
 
+  async function realizarVenta() {
+    if (cotizacionItems.length === 0) {
+      setError('No hay productos en la cotización.')
+      return
+    }
+
+    setVentaLoading(true)
+    setError('')
+
+    try {
+      for (const item of cotizacionItems) {
+        const productoActual = productos.find((p) => p.id === item.id)
+
+        if (!productoActual) {
+          throw new Error(`No se encontró el producto: ${item.nombre}`)
+        }
+
+        if (item.cantidad > productoActual.cantidad) {
+          throw new Error(
+            `No hay suficiente stock para "${item.nombre}". Disponible: ${productoActual.cantidad}`
+          )
+        }
+
+        const nuevaCantidad = productoActual.cantidad - item.cantidad
+
+        const { error } = await supabase
+          .from('productos')
+          .update({ cantidad: nuevaCantidad })
+          .eq('id', item.id)
+
+        if (error) {
+          throw new Error(`No se pudo actualizar el stock de "${item.nombre}"`)
+        }
+      }
+
+      alert('Venta realizada con éxito. El inventario fue actualizado.')
+      limpiarCotizacion()
+      await fetchProductos()
+      setVista('inventario')
+    } catch (err) {
+      const mensaje =
+        err instanceof Error ? err.message : 'No se pudo realizar la venta.'
+      setError(mensaje)
+    } finally {
+      setVentaLoading(false)
+    }
+  }
+
   const productosFiltrados = useMemo(() => {
     const termino = searchTerm.toLowerCase().trim()
 
@@ -338,6 +408,27 @@ export default function Page() {
       return coincideBusqueda && coincideTipo && coincideStock
     })
   }, [productos, searchTerm, tipoFiltro, stockFiltro])
+
+  useEffect(() => {
+    setPaginaActual(1)
+  }, [searchTerm, tipoFiltro, stockFiltro])
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(productosFiltrados.length / PRODUCTOS_POR_PAGINA)
+  )
+
+  const productosPaginados = useMemo(() => {
+    const inicio = (paginaActual - 1) * PRODUCTOS_POR_PAGINA
+    const fin = inicio + PRODUCTOS_POR_PAGINA
+    return productosFiltrados.slice(inicio, fin)
+  }, [productosFiltrados, paginaActual])
+
+  useEffect(() => {
+    if (paginaActual > totalPaginas) {
+      setPaginaActual(totalPaginas)
+    }
+  }, [paginaActual, totalPaginas])
 
   const productosBusquedaCotizacion = useMemo(() => {
     const termino = busquedaProductoCot.toLowerCase().trim()
@@ -545,7 +636,7 @@ export default function Page() {
                   </thead>
 
                   <tbody>
-                    {productosFiltrados.map((producto) => (
+                    {productosPaginados.map((producto) => (
                       <tr key={producto.id} className="bg-slate-50">
                         <td className="px-3 py-3 rounded-l-2xl">{producto.id}</td>
 
@@ -620,7 +711,7 @@ export default function Page() {
               </div>
 
               <div className="md:hidden space-y-4">
-                {productosFiltrados.map((producto) => (
+                {productosPaginados.map((producto) => (
                   <div
                     key={producto.id}
                     className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm"
@@ -710,6 +801,47 @@ export default function Page() {
                   No se encontraron productos con esos filtros.
                 </div>
               ) : null}
+
+              {productosFiltrados.length > 0 ? (
+                <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <p className="text-sm text-slate-600">
+                    Mostrando {(paginaActual - 1) * PRODUCTOS_POR_PAGINA + 1} -{' '}
+                    {Math.min(
+                      paginaActual * PRODUCTOS_POR_PAGINA,
+                      productosFiltrados.length
+                    )}{' '}
+                    de {productosFiltrados.length} productos
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setPaginaActual((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={paginaActual === 1}
+                      className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50 cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+
+                    <span className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+                      Página {paginaActual} de {totalPaginas}
+                    </span>
+
+                    <button
+                      onClick={() =>
+                        setPaginaActual((prev) =>
+                          Math.min(totalPaginas, prev + 1)
+                        )
+                      }
+                      disabled={paginaActual === totalPaginas}
+                      className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 cursor-pointer"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </section>
           </>
         )}
@@ -741,8 +873,18 @@ export default function Page() {
                   >
                     Guardar PDF
                   </button>
+
+                  <button
+                    onClick={realizarVenta}
+                    disabled={ventaLoading || cotizacionItems.length === 0}
+                    className="rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white disabled:opacity-50 cursor-pointer"
+                  >
+                    {ventaLoading ? 'Procesando venta...' : 'Realizar venta'}
+                  </button>
                 </div>
               </div>
+
+              {error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 <input
@@ -996,12 +1138,20 @@ export default function Page() {
               ) : null}
             </div>
 
-            <div className="flex justify-end print:hidden">
+            <div className="flex justify-end gap-3 print:hidden">
               <button
                 onClick={guardarPDF}
                 className="rounded-2xl bg-slate-900 px-6 py-3 font-semibold text-white cursor-pointer"
               >
                 Guardar PDF
+              </button>
+
+              <button
+                onClick={realizarVenta}
+                disabled={ventaLoading || cotizacionItems.length === 0}
+                className="rounded-2xl bg-green-600 px-6 py-3 font-semibold text-white disabled:opacity-50 cursor-pointer"
+              >
+                {ventaLoading ? 'Procesando venta...' : 'Realizar venta'}
               </button>
             </div>
 
@@ -1013,21 +1163,18 @@ export default function Page() {
                 <div className="border border-slate-300">
                   <div className="p-5 border-b border-slate-300">
                     <div className="flex items-start justify-between gap-4">
-                       <div>
-      <img
-        src="/Logo1.png"
-        alt="Logo"
-        className="h-16 w-auto object-contain"
-      />
-    </div>
+                      <div>
+                        <img
+                          src="/Logo1.png"
+                          alt="Logo"
+                          className="h-16 w-auto object-contain"
+                        />
+                      </div>
 
-    {/* DERECHA → TEXTO */}
-    <div className="text-right">
-      <p className="text-sm font-bold">ELECTROTECNIK SERVICIOS</p>
-      <p className="text-xs">TNLGO: SANTIAGO SANDOVAL</p>
-    </div>
-
-          
+                      <div className="text-right">
+                        <p className="text-sm font-bold">ELECTROTECNIK SERVICIOS</p>
+                        <p className="text-xs">TNLGO: SANTIAGO SANDOVAL</p>
+                      </div>
                     </div>
                   </div>
 
